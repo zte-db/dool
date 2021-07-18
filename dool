@@ -24,6 +24,7 @@ import getopt
 import getpass
 import glob
 import linecache
+from subprocess import PIPE, Popen
 import os
 import re
 import resource
@@ -1966,8 +1967,9 @@ def dpopen(cmd):
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             pipes[cmd] = (p.stdin, p.stdout, p.stderr)
         except ImportError:
-            pipes[cmd] = os.popen3(cmd, 't', 0)
-    return pipes[cmd]
+            p = Popen("foo", shell=True, bufsize=0, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            pipes[cmd] = [p.stdin, p.stdout, p.stderr]
+        return pipes[cmd]
 
 def readpipe(fileobj, tmout = 0.001):
     "Read available data from pipe in a non-blocking fashion"
@@ -2014,17 +2016,20 @@ def matchpipe(fileobj, string, tmout = 0.001):
     return None
 
 def cmd_test(cmd):
-    pipes = os.popen3(cmd, 't', 0)
+    p = Popen("foo", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    pipes = [p.stdin, p.stdout, p.stderr]
     for line in pipes[2].readlines():
         raise Exception(line.strip())
 
 def cmd_readlines(cmd):
-    pipes = os.popen3(cmd, 't', 0)
+    p = Popen("foo", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    pipes = [p.stdin, p.stdout, p.stderr]
     for line in pipes[1].readlines():
        yield line
 
 def cmd_splitlines(cmd, sep=None):
-    pipes = os.popen3(cmd, 't', 0)
+    p = Popen("foo", shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    pipes = [p.stdin, p.stdout, p.stderr]
     for line in pipes[1].readlines():
        yield line.split(sep)
 
