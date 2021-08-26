@@ -18,13 +18,21 @@ class dstat_plugin(dstat):
 
     def __init__(self):
         self.name = 'postgresql conn'
-        self.nick = ('ThCon', '%Con')
-        self.vars = ('Threads_connected', 'Threads')
+        self.nick = ('Conn', '%Con',
+                     'Act', 'LongQ',
+                     'LongX', 'Idl',
+                     'LIdl', 'LWait'
+                     )
+        self.vars = ('conn_cnt', 'conn_cnt_rate',
+                     'conn_active_cnt', 'long_query_cnt',
+                     'long_transaction_cnt', 'idl_cnt',
+                     'long_idl_cnt', 'long_waiting_cnt'
+                     )
         self.type = 'f'
-        self.width = 4
+        self.width = 5
         self.scale = 1
 
-    def check(self): 
+    def check(self):
         global psycopg2
         import psycopg2
         try:
@@ -46,13 +54,45 @@ class dstat_plugin(dstat):
         try:
             c = self.db.cursor()
             c.execute("select count(*) used from pg_stat_activity")
-            conn_cnt=c.fetchone()[0]
-            c.execute("select setting::int max_conn from pg_settings where name=$$max_connections$$")
+            conn_cnt = c.fetchone()[0]
+            c.execute(
+                "select setting::int max_conn from pg_settings where name=$$max_connections$$")
             max_conn = c.fetchone()[0]
-            c.execute("select setting::int res_for_super from pg_settings where name=$$superuser_reserved_connections$$")
+            c.execute(
+                "select setting::int res_for_super from pg_settings where name=$$superuser_reserved_connections$$")
             res_for_super_conn = c.fetchone()[0]
+            c.execute(
+                "select count(*) from pg_stat_activity where state = 'active'")
+            conn_cnt_activate = c.fetchone()[0]
+
+            c.execute(
+                "select count(*) from pg_stat_activity where state = 'active' and now()-query_start > interval '15 second';")
+            long_query_cnt = c.fetchone()[0]
+
+            c.execute(
+                "select count(*) from pg_stat_activity where now()-xact_start > interval '15 second';")
+            long_transaction_cnt = c.fetchone()[0]
+
+            c.execute(
+                "select count(*) from pg_stat_activity where state='idle in transaction'")
+            idl_cnt = c.fetchone()[0]
+            c.execute(
+                "select count(*) from pg_stat_activity where state='idle in transaction' and now()-state_change > interval '15 second';")
+            long_idl_cnt = c.fetchone()[0]
+
+            c.execute(
+                "select count(*) from pg_stat_activity where wait_event_type is not null and now()-state_change > interval '15 second';")
+            long_waiting_cnt = c.fetchone()[0]
+
             self.val[self.vars[0]] = conn_cnt
             self.val[self.vars[1]] = conn_cnt/max_conn
+            self.val[self.vars[2]] = conn_cnt_activate
+
+            self.val[self.vars[3]] = long_query_cnt
+            self.val[self.vars[4]] = long_transaction_cnt
+            self.val[self.vars[5]] = idl_cnt
+            self.val[self.vars[6]] = long_idl_cnt
+            self.val[self.vars[7]] = long_waiting_cnt
 
         except Exception as e:
             for name in self.vars:
