@@ -21,12 +21,18 @@ class dstat_plugin(dstat):
         self.nick = ('Conn', '%Con',
                      'Act', 'LongQ',
                      'LongX', 'Idl',
-                     'LIdl', 'LWait'
+                     'LIdl', 'LWait',
+                     'SQLs1', 'SQLs3',
+                     'SQLs5', 
+                     'Xact1', 'Xact3',
                      )
         self.vars = ('conn_cnt', 'conn_cnt_rate',
                      'conn_active_cnt', 'long_query_cnt',
                      'long_transaction_cnt', 'idl_cnt',
-                     'long_idl_cnt', 'long_waiting_cnt'
+                     'long_idl_cnt', 'long_waiting_cnt',
+                     'sqls_1sec', 'sqls_3sec',
+                     'sqls_5sec',
+                     'transactions_1sec', 'transactions_3sec',
                      )
         self.type = 'f'
         self.width = 5
@@ -84,6 +90,18 @@ class dstat_plugin(dstat):
                 "select count(*) from pg_stat_activity where wait_event_type is not null and now()-state_change > interval '15 second';")
             long_waiting_cnt = c.fetchone()[0]
 
+            c.execute("select count(*) from pg_stat_activity where date_part('epoch',now()-query_start)>1 and state<>'idle';")
+            sqls_1sec = c.fetchone()[0]
+            c.execute("select count(*) from pg_stat_activity where date_part('epoch',now()-query_start)>3 and state<>'idle';")
+            sqls_3sec = c.fetchone()[0]
+            c.execute("select count(*) from pg_stat_activity where date_part('epoch',now()-query_start)>5 and state<>'idle';")
+            sqls_5sec = c.fetchone()[0]
+
+            c.execute("select count(*) from pg_stat_activity where date_part('epoch',now()-xact_start)>1 and state<>'idle';")
+            transactions_1sec = c.fetchone()[0]
+            c.execute("select count(*) from pg_stat_activity where date_part('epoch',now()-xact_start)>3 and state<>'idle';")
+            transactions_3sec = c.fetchone()[0]
+
             self.val[self.vars[0]] = conn_cnt
             self.val[self.vars[1]] = conn_cnt/max_conn
             self.val[self.vars[2]] = conn_cnt_activate
@@ -93,6 +111,13 @@ class dstat_plugin(dstat):
             self.val[self.vars[5]] = idl_cnt
             self.val[self.vars[6]] = long_idl_cnt
             self.val[self.vars[7]] = long_waiting_cnt
+
+            self.val[self.vars[8]] = sqls_1sec
+            self.val[self.vars[9]] = sqls_3sec
+            self.val[self.vars[10]] = sqls_5sec
+
+            self.val[self.vars[11]] = transactions_1sec
+            self.val[self.vars[12]] = transactions_3sec
 
         except Exception as e:
             for name in self.vars:
