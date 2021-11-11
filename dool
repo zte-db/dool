@@ -2864,6 +2864,7 @@ def perform(update):
         line = newline
         oline = ''
         for o in totlist:
+            o.check()
             o.extract()
             if o in vislist:
                 line = line + o.show() + o.showend(totlist, vislist)
