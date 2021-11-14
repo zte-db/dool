@@ -1,16 +1,3 @@
-global pg_user
-pg_user = os.getenv('DSTAT_PG_USER') or os.getenv('USER')
-
-global pg_pwd
-pg_pwd = os.getenv('DSTAT_PG_PWD')
-
-global pg_host
-pg_host = os.getenv('DSTAT_PG_HOST')
-
-global pg_port
-pg_port = os.getenv('DSTAT_PG_PORT')
-
-
 class dstat_plugin(dstat):
     """
     Plugin for PostgreSQL connections.
@@ -32,34 +19,21 @@ class dstat_plugin(dstat):
         self.scale = 1
 
     def check(self):
-        global psycopg2
-        import psycopg2
-        try:
-            args = {}
-            if pg_user:
-                args['user'] = pg_user
-            if pg_pwd:
-                args['password'] = pg_pwd
-            if pg_host:
-                args['host'] = pg_host
-            if pg_port:
-                args['port'] = pg_port
-
-            self.db = psycopg2.connect(**args)
-        except Exception as e:
-            raise Exception('Cannot interface with PostgreSQL server, %s' % e)
+        pass
 
     def extract(self):
+        from conn import PostgresqlConn
         try:
-            c = self.db.cursor()
-            sql = 'select name, setting from pg_settings where name in {}; '
-            sql = sql.format(self.vars)
-            c.execute(sql)
-            res = c.fetchall()
+            with PostgresqlConn() as c:
+                #  c = self.db.cursor()
+                sql = 'select name, setting from pg_settings where name in {}; '
+                sql = sql.format(self.vars)
+                c.execute(sql)
+                res = c.fetchall()
 
-            for k, v in res:
-                v = float(v)
-                self.val[k] = v
+                for k, v in res:
+                    v = float(v)
+                    self.val[k] = v
 
         except Exception as e:
             for name in self.vars:
