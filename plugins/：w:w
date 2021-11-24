@@ -47,16 +47,11 @@ class dstat_plugin(dstat):
             c = self.db.cursor()
             c.execute('select pg_current_wal_lsn();')
             self.set2['wal'] = c.fetchone()[0]
-            wal1 = self.set1['wal']
-            wal2 = self.set2['wal']
-            if wal1 != 0:
-                sql = "select pg_wal_lsn_diff('{}', '{}')".format(wal2, wal1)
-                c.execute(sql)
-                waldiff = c.fetchone()[0]/elapsed
-            else:
-                waldiff = 0
-            self.val['wal'] = waldiff
-            #  self.val['wal'] = (self.set2['wal'] - self.set1['wal']) * 1.0 / elapsed
+            print(self.set2)
+            sql = 'select pg_wal_lsn_diff("{}", "{}")'.format(self.set2['wal'], self.se1['wal'])
+            c.execute(sql)
+            self.val['wal'] = c.fetchone()[0]/elapsed
+            self.val['wal'] = (self.set2['wal'] - self.set1['wal']) * 1.0 / elapsed
             if step == op.delay:
                 self.set1.update(self.set2)
 
