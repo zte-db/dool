@@ -68,7 +68,6 @@ class dstat_plugin(dstat):
             hd = (self.set2['heap_blks_hit']-self.set1['heap_blks_hit'])
             self.val['heap_blks_hit'] = hd
             self.val['ratio_hit'] = int(hd)*1.0 / (int(hd)+int(rd)+0.00001)
-            print(heap_blks_read,heap_blks_hit)
             if step == op.delay:
                 self.set1.update(self.set2)
         except Exception as e:
