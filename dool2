@@ -2618,7 +2618,7 @@ def main():
 
     ownpid   = str(os.getpid())
     pagesize = resource.getpagesize()
-    interval = 20
+    interval = 1
     user     = getpass.getuser()
     hostname = os.uname()[1]
 
