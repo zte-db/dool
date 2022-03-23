@@ -18,10 +18,10 @@ class dstat_plugin(dstat):
 
     def __init__(self):
         self.name = 'postgresql locks'
-        self.nick = ('Dead',)
-        self.vars = ('deadlocks',)
+        self.nick = ('Dead',)+('Locks',)
+        self.vars = ('deadlocks',)+('lock_num',)
         self.type = 'f'
-        self.width = 4
+        self.width = 5
         self.scale = 1
 
     def check(self):
@@ -50,6 +50,10 @@ class dstat_plugin(dstat):
             self.val['deadlocks'] = (self.set2['deadlocks'] - self.set1['deadlocks']) * 1.0 / elapsed
             if step == op.delay:
                 self.set1.update(self.set2)
+
+            sql='select count(1) from pg_locks where granted is false;'
+            c.execute(sql)
+            self.val['lock_num'] = c.fetchone()[0]
 
         except Exception as e:
             for name in self.vars:
