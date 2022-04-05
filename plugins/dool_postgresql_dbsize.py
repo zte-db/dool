@@ -13,11 +13,11 @@ pg_port = os.getenv('DSTAT_PG_PORT')
 
 class dstat_plugin(dstat):
     """
-    Plugin for PostgreSQL connections.
+    Plugin for PostgreSQL dbsize.
     """
 
     def __init__(self):
-        self.name = 'postgresql conn'
+        self.name = 'postgresql dbsize'
         self.nick = ('size', 'grow', 'insert', 'update', 'delete')
         self.vars = ('dbsize', 'grow_rate', 'inserted',
                      'updated', 'deleted')

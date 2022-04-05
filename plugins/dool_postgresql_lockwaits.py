@@ -17,7 +17,7 @@ class dstat_plugin(dstat):
     """
 
     def __init__(self):
-        self.name = 'postgresql locks'
+        self.name = 'postgresql lockswaits'
         self.nick = ('Locks',)
         self.vars = ('lock_num',)
         self.type = 'f'
