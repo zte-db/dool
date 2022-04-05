@@ -21,7 +21,7 @@ class dstat_plugin(dstat):
         self.nick = ('Time',)
         self.vars = ('time_now',)
         self.type = 'f'
-        self.width = 10
+        self.width = 15
         self.scale = 1
 
     def check(self):
@@ -45,8 +45,7 @@ class dstat_plugin(dstat):
     def extract(self):
         try:
             c = self.db.cursor()
-            sql='''select ceil(extract(epoch from now()))
-            '''
+            sql='select extract(epoch from now())'
             c.execute(sql)
             Time = c.fetchone()[0]
             self.val[self.vars[0]] = Time
